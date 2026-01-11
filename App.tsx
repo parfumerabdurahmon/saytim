@@ -13,6 +13,7 @@ const App: React.FC = () => {
   const [contactInfo, setContactInfo] = useState(INITIAL_CONTACT);
 
   useEffect(() => {
+    // Load persisted boutique data
     const savedPerfumes = localStorage.getItem('premium_perfumes_data');
     const savedTranslations = localStorage.getItem('premium_translations_data');
     const savedLinks = localStorage.getItem('premium_links_data');
@@ -36,7 +37,7 @@ const App: React.FC = () => {
           <img 
             src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=2000" 
             className="w-full h-full object-cover opacity-40 brightness-50"
-            alt="Hero Background"
+            alt="Premium Background"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]"></div>
         </div>
@@ -45,24 +46,20 @@ const App: React.FC = () => {
           <div className="mb-8 inline-block overflow-hidden">
             <span className="text-man-gold font-bold tracking-[0.8em] text-[10px] uppercase block animate-fade-in">PREMIUM PARFUMES</span>
           </div>
-          <h1 className="text-6xl md:text-[120px] font-serif text-white mb-10 leading-none tracking-tighter animate-slide-up whitespace-pre-line">
+          <h1 className="text-6xl md:text-[100px] font-serif text-white mb-10 leading-none tracking-tighter animate-slide-up">
             {t.heroTitle}
           </h1>
           <p className="text-gray-400 text-sm md:text-xl font-light mb-14 tracking-widest uppercase max-w-2xl mx-auto">
             {t.heroSub}
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <a href="#collection" className="bg-man-gold text-black px-14 py-5 rounded-none font-extrabold uppercase tracking-widest text-[10px] hover:bg-white transition-all transform hover:-translate-y-1 text-center">
+            <a href="#collection" className="bg-man-gold text-black px-14 py-5 font-extrabold uppercase tracking-widest text-[10px] hover:bg-white transition-all transform hover:-translate-y-1 text-center">
               {t.explore}
             </a>
-            <a href={contactInfo.telegram} target="_blank" className="border border-white/20 text-white backdrop-blur-md px-14 py-5 rounded-none font-extrabold uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all text-center">
+            <a href={contactInfo.telegram} target="_blank" rel="noreferrer" className="border border-white/20 text-white backdrop-blur-md px-14 py-5 font-extrabold uppercase tracking-widest text-[10px] hover:bg-white/10 transition-all text-center">
               {t.contact}
             </a>
           </div>
-        </div>
-        
-        <div className="absolute bottom-10 left-10 hidden lg:block animate-fade-in">
-           <p className="text-man-gold text-[10px] tracking-[0.3em] font-bold vertical-text uppercase">EST. 2024</p>
         </div>
       </section>
 

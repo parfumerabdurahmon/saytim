@@ -1,7 +1,11 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
-// Keep only core helper if needed for future extensions, otherwise simplified.
+/**
+ * Service for handling Gemini API interactions.
+ * Note: Key handling is managed via process.env.API_KEY.
+ */
+
 export const isKeyNotFoundError = (error: any) => {
   const msg = error?.message || "";
   return msg.includes("Requested entity was not found") || msg.includes("404");
@@ -14,42 +18,44 @@ const handleApiError = (error: any) => {
   throw error;
 };
 
-// Generic generate content if needed for hidden features
-export async function getResponse(prompt: string): Promise<string> {
-  if (!process.env.API_KEY) return "";
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: prompt,
-    });
-    return response.text || "";
-  } catch (e) {
-    return handleApiError(e);
-  }
-}
+// Helper to convert file to base64
+export const fileToBtnBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const base64String = (reader.result as string).split(',')[1];
+      resolve(base64String);
+    };
+    reader.onerror = error => reject(error);
+  });
+};
 
-// Fix: Implement getPerfumeRecommendation
+/**
+ * Professional Perfume Recommendation Engine
+ */
 export async function getPerfumeRecommendation(prompt: string): Promise<string> {
-  if (!process.env.API_KEY) return "";
+  if (!process.env.API_KEY) return "API Key not configured.";
+  
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
-        systemInstruction: "You are an expert perfume consultant. Provide professional advice based on the user's preference.",
+        systemInstruction: "You are a luxury perfume consultant for a high-end boutique. Provide concise, elegant, and professional fragrance advice.",
       }
     });
-    return response.text || "";
+    return response.text || "No recommendation found.";
   } catch (e) {
     return handleApiError(e);
   }
 }
 
-// Fix: Implement generateProImage
-export async function generateProImage(prompt: string, aspectRatio: string, imageSize: string): Promise<string | null> {
-  if (!process.env.API_KEY) return null;
+/**
+ * Generate High Quality Images using Gemini 3 Pro Image
+ */
+export async function generateProImage(prompt: string, aspectRatio: string = "1:1", imageSize: string = "1K"): Promise<string | null> {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
@@ -62,7 +68,7 @@ export async function generateProImage(prompt: string, aspectRatio: string, imag
         }
       }
     });
-    
+
     for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) {
         return `data:image/png;base64,${part.inlineData.data}`;
@@ -74,9 +80,10 @@ export async function generateProImage(prompt: string, aspectRatio: string, imag
   }
 }
 
-// Fix: Implement editImage
+/**
+ * Edit existing images using Gemini 2.5 Flash Image
+ */
 export async function editImage(base64Data: string, prompt: string): Promise<string | null> {
-  if (!process.env.API_KEY) return null;
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
@@ -100,32 +107,20 @@ export async function editImage(base64Data: string, prompt: string): Promise<str
   }
 }
 
-// Fix: Implement fileToBtnBase64 helper
-export async function fileToBtnBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64String = (reader.result as string).split(',')[1];
-      resolve(base64String);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-// Fix: Implement generateVeoVideo
+/**
+ * Generate Videos using Veo 3.1
+ */
 export async function generateVeoVideo(prompt: string, imageBase64?: string, aspectRatio: '16:9' | '9:16' = '16:9'): Promise<string | null> {
-  if (!process.env.API_KEY) return null;
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     let operation = await ai.models.generateVideos({
       model: 'veo-3.1-fast-generate-preview',
-      prompt: prompt,
-      ...(imageBase64 && { image: { imageBytes: imageBase64, mimeType: 'image/png' } }),
+      prompt,
+      image: imageBase64 ? { imageBytes: imageBase64, mimeType: 'image/png' } : undefined,
       config: {
         numberOfVideos: 1,
         resolution: '720p',
-        aspectRatio: aspectRatio
+        aspectRatio
       }
     });
 
@@ -144,9 +139,10 @@ export async function generateVeoVideo(prompt: string, imageBase64?: string, asp
   }
 }
 
-// Fix: Implement getGroundedChatResponse
+/**
+ * Grounded Chat for Concierge with Google Search and Maps
+ */
 export async function getGroundedChatResponse(message: string): Promise<{ text: string, grounding: any[] }> {
-  if (!process.env.API_KEY) return { text: "", grounding: [] };
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
@@ -157,10 +153,10 @@ export async function getGroundedChatResponse(message: string): Promise<{ text: 
       }
     });
 
-    return {
-      text: response.text || "",
-      grounding: response.candidates?.[0]?.groundingMetadata?.groundingChunks || []
-    };
+    const text = response.text || "";
+    const grounding = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    
+    return { text, grounding };
   } catch (e) {
     return handleApiError(e);
   }
