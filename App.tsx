@@ -5,10 +5,6 @@ import PerfumeCard from './components/PerfumeCard';
 import LaunchSection from './components/LaunchSection';
 import { TRANSLATIONS as INITIAL_TRANSLATIONS, PERFUMES as INITIAL_PERFUMES, CONTACT_INFO as INITIAL_CONTACT } from './constants';
 
-const AIAdvisor = lazy(() => import('./components/AIAdvisor'));
-const Visualizer = lazy(() => import('./components/Visualizer'));
-const MotionStudio = lazy(() => import('./components/MotionStudio'));
-const Concierge = lazy(() => import('./components/Concierge'));
 const MessageForm = lazy(() => import('./components/MessageForm'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
 
@@ -89,12 +85,8 @@ const App: React.FC = () => {
       </section>
 
       <Suspense fallback={<div className="h-64 bg-[#050505]" />}>
-        <AIAdvisor lang={lang} />
-        <Visualizer lang={lang} />
-        <MotionStudio lang={lang} />
-        <MessageForm lang={lang} contactInfo={contactInfo} />
         <LaunchSection lang={lang} contactInfo={contactInfo} />
-        <Concierge lang={lang} />
+        <MessageForm lang={lang} contactInfo={contactInfo} />
         <AdminPanel />
       </Suspense>
     </Layout>
