@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 
 const BOT_TOKEN = "7628257957:AAEp9VuIg8lsGUhHDAET2q6TCR_fyOJgc-Y";
-const BOT_USERNAME = "@Premium_Atirchi_bot";
+const CHANNEL_URL = "https://t.me/PremiumParfumes";
 
 interface MessageFormProps {
   lang: 'uz' | 'ru';
@@ -13,17 +13,15 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
   const [formData, setFormData] = useState({ name: '', phone: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  const myPhone = contactInfo?.phone || "+998996909575";
-
   const t = {
     uz: {
       name: "ISM",
       phone: "TEL",
       msg: "XABAR",
       send: "YUBORISH",
-      smsConfirm: "SMS ORQALI TASDIQLASH",
       success: "Xabaringiz qabul qilindi. Tez orada bog'lanamiz.",
-      botAction: "Bot orqali kuzatib boring:",
+      channelAction: "Kanalimizni kuzatib boring:",
+      channelName: "@PremiumParfumes",
       error: "Xatolik yuz berdi. Iltimos qaytadan urinib ko'ring."
     },
     ru: {
@@ -31,24 +29,17 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
       phone: "ТЕЛ",
       msg: "СООБЩЕНИЕ",
       send: "ОТПРАВИТЬ",
-      smsConfirm: "ПОДТВЕРДИТЬ ПО SMS",
       success: "Сообщение принято. Мы скоро свяжемся с вами.",
-      botAction: "Следите через бота:",
+      channelAction: "Следите за нашим каналом:",
+      channelName: "@PremiumParfumes",
       error: "Произошла ошибка. Пожалуйста, попробуйте еще раз."
     }
   }[lang];
-
-  const handleSmsRedirect = () => {
-    const text = `Salom, men ${formData.name}. Tel: ${formData.phone}. Xabar: ${formData.message}`;
-    const separator = /iPhone|iPad|iPod/.test(navigator.userAgent) ? '&' : '?';
-    window.location.href = `sms:${myPhone.replace(/\s/g, '')}${separator}body=${encodeURIComponent(text)}`;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
 
-    // Professional formatting for the admin notification
     const text = `🤵 <b>Yangi Buyurtma / Новое Заказ</b> ✨\n\n` +
                  `👤 <b>Ism / Имя:</b> ${formData.name}\n` +
                  `📞 <b>Tel / Тел:</b> <code>${formData.phone}</code>\n` +
@@ -56,12 +47,11 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
                  `📅 <b>Sana:</b> ${new Date().toLocaleString('uz-UZ')}`;
 
     try {
-      // Sending to the specific chat/admin group via the provided bot token
       const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chat_id: "8066400336", // Keeping existing chat_id as it was specifically set in previous version
+          chat_id: "8066400336",
           text: text,
           parse_mode: 'HTML'
         })
@@ -84,24 +74,24 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
         <div>
           {status === 'success' ? (
             <div className="animate-scale-in text-center space-y-8 bg-white/5 p-12 border border-man-gold/20">
-              <div className="w-20 h-20 bg-man-gold rounded-full flex items-center justify-center mx-auto animate-pulse">
+              <div className="w-20 h-20 bg-man-gold rounded-full flex items-center justify-center mx-auto animate-pulse shadow-[0_0_30px_rgba(197,160,89,0.3)]">
                 <i className="fab fa-telegram-plane text-black text-3xl"></i>
               </div>
               <div className="space-y-4">
-                <h3 className="text-man-gold text-2xl font-serif uppercase tracking-widest">{t.success}</h3>
-                <p className="text-gray-500 text-[10px] font-bold tracking-[0.3em] uppercase">{t.botAction}</p>
+                <h3 className="text-man-gold text-2xl font-serif uppercase tracking-widest leading-snug">{t.success}</h3>
+                <p className="text-gray-500 text-[10px] font-bold tracking-[0.3em] uppercase">{t.channelAction}</p>
                 <a 
-                  href={`https://t.me/${BOT_USERNAME.replace('@', '')}`} 
+                  href={CHANNEL_URL} 
                   target="_blank" 
                   rel="noreferrer"
-                  className="inline-block text-white text-xl font-black tracking-tighter hover:text-man-gold transition-colors"
+                  className="inline-block text-white text-xl font-black tracking-tighter hover:text-man-gold transition-colors underline decoration-man-gold/30 underline-offset-8"
                 >
-                  {BOT_USERNAME}
+                  {t.channelName}
                 </a>
               </div>
               <button 
                 onClick={() => setStatus('idle')}
-                className="text-gray-700 text-[10px] font-black uppercase tracking-[0.5em] hover:text-white transition-colors"
+                className="text-gray-700 text-[10px] font-black uppercase tracking-[0.5em] hover:text-white transition-colors block mx-auto pt-4"
               >
                 YANGI XABAR / НОВОЕ СООБЩЕНИЕ
               </button>
@@ -153,15 +143,6 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
                 >
                   <span className="relative z-10">{status === 'loading' ? 'SENDING...' : t.send}</span>
                   <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={handleSmsRedirect}
-                  className="border border-white/10 text-white/60 py-4 px-12 w-full font-bold uppercase tracking-[0.3em] text-[9px] hover:border-man-gold hover:text-man-gold transition-all flex items-center justify-center gap-3"
-                >
-                  <i className="fas fa-sms text-lg"></i>
-                  {t.smsConfirm}
                 </button>
               </div>
 
