@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Layout from './components/Layout';
 import PerfumeCard from './components/PerfumeCard';
 import LaunchSection from './components/LaunchSection';
+import TalkingAI from './components/TalkingAI';
 import { TRANSLATIONS as INITIAL_TRANSLATIONS, PERFUMES as INITIAL_PERFUMES, CONTACT_INFO as INITIAL_CONTACT } from './constants';
 
 const MessageForm = lazy(() => import('./components/MessageForm'));
@@ -75,6 +76,8 @@ const App: React.FC = () => {
         <MessageForm lang={lang} contactInfo={contactInfo} />
         <AdminPanel />
       </Suspense>
+
+      <TalkingAI lang={lang} />
     </Layout>
   );
 };
