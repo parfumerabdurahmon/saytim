@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 
 const BOT_TOKEN = "8387180692:AAEsVJGhSTkUCb4mfhRyI69kUceOgJRHAUg";
+const BOT_USERNAME = "@PREMIUM_PARFUMES_bot";
 
 interface MessageFormProps {
   lang: 'uz' | 'ru';
@@ -22,6 +23,7 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
       send: "YUBORISH",
       smsConfirm: "SMS ORQALI TASDIQLASH",
       success: "Xabaringiz qabul qilindi.",
+      botAction: "Bot orqali kuzatib boring:",
       error: "Xatolik yuz berdi."
     },
     ru: {
@@ -31,6 +33,7 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
       send: "ОТПРАВИТЬ",
       smsConfirm: "ПОДТВЕРДИТЬ ПО SMS",
       success: "Сообщение принято.",
+      botAction: "Следите через бота:",
       error: "Произошла ошибка."
     }
   }[lang];
@@ -60,6 +63,7 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
 
       if (response.ok) {
         setStatus('success');
+        setFormData({ name: '', phone: '', message: '' }); // Clear form
       } else {
         setStatus('error');
       }
@@ -72,70 +76,90 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
     <section id="leave-message" className="py-24 bg-[#0a0a0a]">
       <div className="max-w-4xl mx-auto px-4">
         <div>
-          <form onSubmit={handleSubmit} className="space-y-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="relative border-b border-white/10 focus-within:border-man-gold transition-colors pb-2">
-                <label className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold block mb-2">{t.name}</label>
-                <input
-                  required
-                  type="text"
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-transparent p-0 text-white outline-none font-light"
-                />
+          {status === 'success' ? (
+            <div className="animate-scale-in text-center space-y-8 bg-white/5 p-12 border border-man-gold/20">
+              <div className="w-20 h-20 bg-man-gold rounded-full flex items-center justify-center mx-auto animate-pulse">
+                <i className="fab fa-telegram-plane text-black text-3xl"></i>
               </div>
-              <div className="relative border-b border-white/10 focus-within:border-man-gold transition-colors pb-2">
-                <label className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold block mb-2">{t.phone}</label>
-                <input
-                  required
-                  type="tel"
-                  placeholder="+998"
-                  value={formData.phone}
-                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-transparent p-0 text-white outline-none font-light"
-                />
+              <div className="space-y-4">
+                <h3 className="text-man-gold text-2xl font-serif uppercase tracking-widest">{t.success}</h3>
+                <p className="text-gray-500 text-xs font-bold tracking-[0.3em] uppercase">{t.botAction}</p>
+                <a 
+                  href={`https://t.me/${BOT_USERNAME.replace('@', '')}`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="inline-block text-white text-xl font-black tracking-tighter hover:text-man-gold transition-colors"
+                >
+                  {BOT_USERNAME}
+                </a>
               </div>
-            </div>
-
-            <div className="relative border-b border-white/10 focus-within:border-man-gold transition-colors pb-2">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold block mb-2">{t.msg}</label>
-              <textarea
-                required
-                rows={2}
-                value={formData.message}
-                onChange={e => setFormData({ ...formData, message: e.target.value })}
-                className="w-full bg-transparent p-0 text-white outline-none font-light resize-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="group relative overflow-hidden bg-man-gold text-black py-6 px-12 w-full font-black uppercase tracking-[0.4em] text-[10px] hover:text-white transition-colors disabled:opacity-50"
+              <button 
+                onClick={() => setStatus('idle')}
+                className="text-gray-700 text-[10px] font-black uppercase tracking-[0.5em] hover:text-white transition-colors"
               >
-                <span className="relative z-10">{status === 'loading' ? '...' : t.send}</span>
-                <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-              </button>
-              
-              <button
-                type="button"
-                onClick={handleSmsRedirect}
-                className="border border-white/10 text-white/60 py-4 px-12 w-full font-bold uppercase tracking-[0.3em] text-[9px] hover:border-man-gold hover:text-man-gold transition-all flex items-center justify-center gap-3"
-              >
-                <i className="fas fa-sms text-lg"></i>
-                {t.smsConfirm}
+                YANGI XABAR / НОВОЕ СООБЩЕНИЕ
               </button>
             </div>
-
-            {status === 'success' && (
-              <div className="animate-fade-in text-center space-y-2">
-                <p className="text-man-gold text-[10px] font-bold tracking-widest">{t.success}</p>
-                <p className="text-gray-600 text-[8px] uppercase tracking-tighter">Telegram & SMS channels open</p>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="relative border-b border-white/10 focus-within:border-man-gold transition-colors pb-2">
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold block mb-2">{t.name}</label>
+                  <input
+                    required
+                    type="text"
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full bg-transparent p-0 text-white outline-none font-light"
+                  />
+                </div>
+                <div className="relative border-b border-white/10 focus-within:border-man-gold transition-colors pb-2">
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold block mb-2">{t.phone}</label>
+                  <input
+                    required
+                    type="tel"
+                    placeholder="+998"
+                    value={formData.phone}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full bg-transparent p-0 text-white outline-none font-light"
+                  />
+                </div>
               </div>
-            )}
-            {status === 'error' && <p className="text-red-500 text-[10px] font-bold tracking-widest text-center">{t.error}</p>}
-          </form>
+
+              <div className="relative border-b border-white/10 focus-within:border-man-gold transition-colors pb-2">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold block mb-2">{t.msg}</label>
+                <textarea
+                  required
+                  rows={2}
+                  value={formData.message}
+                  onChange={e => setFormData({ ...formData, message: e.target.value })}
+                  className="w-full bg-transparent p-0 text-white outline-none font-light resize-none"
+                />
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  className="group relative overflow-hidden bg-man-gold text-black py-6 px-12 w-full font-black uppercase tracking-[0.4em] text-[10px] hover:text-white transition-colors disabled:opacity-50"
+                >
+                  <span className="relative z-10">{status === 'loading' ? '...' : t.send}</span>
+                  <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleSmsRedirect}
+                  className="border border-white/10 text-white/60 py-4 px-12 w-full font-bold uppercase tracking-[0.3em] text-[9px] hover:border-man-gold hover:text-man-gold transition-all flex items-center justify-center gap-3"
+                >
+                  <i className="fas fa-sms text-lg"></i>
+                  {t.smsConfirm}
+                </button>
+              </div>
+
+              {status === 'error' && <p className="text-red-500 text-[10px] font-bold tracking-widest text-center">{t.error}</p>}
+            </form>
+          )}
         </div>
       </div>
     </section>
