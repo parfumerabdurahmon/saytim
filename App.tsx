@@ -13,7 +13,7 @@ const App: React.FC = () => {
   const [contactInfo, setContactInfo] = useState(INITIAL_CONTACT);
 
   useEffect(() => {
-    // Load persisted boutique data
+    // Persistent storage for user edits via Admin Panel
     const savedPerfumes = localStorage.getItem('premium_perfumes_data');
     const savedTranslations = localStorage.getItem('premium_translations_data');
     const savedLinks = localStorage.getItem('premium_links_data');
@@ -37,7 +37,7 @@ const App: React.FC = () => {
           <img 
             src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=2000" 
             className="w-full h-full object-cover opacity-40 brightness-50"
-            alt="Premium Background"
+            alt="Luxury Fragrance"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]"></div>
         </div>
@@ -60,6 +60,10 @@ const App: React.FC = () => {
               {t.contact}
             </a>
           </div>
+        </div>
+        
+        <div className="absolute bottom-10 left-10 hidden lg:block animate-fade-in opacity-30">
+           <p className="text-man-gold text-[10px] tracking-[0.3em] font-bold vertical-text uppercase">EST. 2024</p>
         </div>
       </section>
 
