@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { PERFUMES } from '../constants';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey:"AIzaSyC2hTHOykf_sKdyN7wdWZBGV5JZ33eqh6E" });
 
 interface TalkingAIProps {
   lang: 'uz' | 'ru';
