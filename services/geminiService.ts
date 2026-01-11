@@ -1,36 +1,28 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-/**
- * Service for handling Gemini API interactions securely.
- * Models used: 
- * - gemini-3-pro-preview (Complex reasoning, Recommendations)
- * - gemini-3-pro-image-preview (High-quality Image Gen)
- * - gemini-2.5-flash-image (Image Editing)
- * - veo-3.1-fast-generate-preview (Video Generation)
- * - gemini-3-flash-preview (Grounded Search)
- */
-
 export const isKeyNotFoundError = (error: any) => {
   const msg = error?.message || "";
   return msg.includes("Requested entity was not found") || msg.includes("404");
 };
 
 const handleApiError = (error: any) => {
+  console.error("Gemini API Error:", error);
   if (isKeyNotFoundError(error)) {
     window.dispatchEvent(new CustomEvent('aistudio:key_error'));
   }
-  throw error;
+  return "Kechirasiz, xizmat vaqtinchalik mavjud emas. / Извините, сервис временно недоступен.";
 };
 
 /**
  * Professional Perfume Recommendation Engine
  */
 export async function getPerfumeRecommendation(prompt: string): Promise<string> {
-  if (!process.env.API_KEY) return "API Key not configured.";
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return "API Key not configured.";
   
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
@@ -45,41 +37,45 @@ export async function getPerfumeRecommendation(prompt: string): Promise<string> 
 }
 
 /**
- * Generates high-quality images using gemini-3-pro-image-preview
+ * Generate high-quality images using gemini-3-pro-image-preview
  */
 export async function generateProImage(prompt: string, aspectRatio: string = "1:1", imageSize: string = "1K"): Promise<string | null> {
-  if (!process.env.API_KEY) return null;
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return null;
+
   try {
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
       contents: [{ text: prompt }],
       config: {
         imageConfig: {
           aspectRatio: aspectRatio as any,
-          imageSize: imageSize as any
+          imageSize: imageSize as any,
         }
       }
     });
 
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
+    const imagePart = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
+    if (imagePart?.inlineData) {
+      return `data:image/png;base64,${imagePart.inlineData.data}`;
     }
     return null;
   } catch (e) {
-    return handleApiError(e);
+    console.error(e);
+    return null;
   }
 }
 
 /**
- * Edits an existing image based on a prompt
+ * Edit images using gemini-2.5-flash-image
  */
 export async function editImage(base64Data: string, prompt: string): Promise<string | null> {
-  if (!process.env.API_KEY) return null;
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return null;
+
   try {
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
@@ -90,28 +86,30 @@ export async function editImage(base64Data: string, prompt: string): Promise<str
       }
     });
 
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
+    const imagePart = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
+    if (imagePart?.inlineData) {
+      return `data:image/png;base64,${imagePart.inlineData.data}`;
     }
     return null;
   } catch (e) {
-    return handleApiError(e);
+    console.error(e);
+    return null;
   }
 }
 
 /**
- * Generates cinematic videos using Veo
+ * Generate video using veo-3.1-fast-generate-preview
  */
 export async function generateVeoVideo(prompt: string, imageBase64?: string, aspectRatio: '16:9' | '9:16' = '16:9'): Promise<string | null> {
-  if (!process.env.API_KEY) return null;
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return null;
+
   try {
+    const ai = new GoogleGenAI({ apiKey });
     let operation = await ai.models.generateVideos({
       model: 'veo-3.1-fast-generate-preview',
       prompt,
-      ...(imageBase64 && { image: { imageBytes: imageBase64, mimeType: 'image/png' } }),
+      image: imageBase64 ? { imageBytes: imageBase64, mimeType: 'image/png' } : undefined,
       config: {
         numberOfVideos: 1,
         resolution: '720p',
@@ -125,40 +123,46 @@ export async function generateVeoVideo(prompt: string, imageBase64?: string, asp
     }
 
     const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-    if (!downloadLink) return null;
-    
-    return `${downloadLink}&key=${process.env.API_KEY}`;
+    if (downloadLink) {
+      return `${downloadLink}&key=${apiKey}`;
+    }
+    return null;
   } catch (e) {
-    return handleApiError(e);
+    console.error(e);
+    return null;
   }
 }
 
 /**
- * Handles grounded chat with Google Search
+ * Chat with Google Search and Maps grounding
  */
-export async function getGroundedChatResponse(message: string): Promise<{ text: string, grounding: any[] }> {
-  if (!process.env.API_KEY) return { text: "API Key missing", grounding: [] };
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+export async function getGroundedChatResponse(message: string): Promise<{ text: string, grounding?: any[] }> {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return { text: "API Key missing" };
+
   try {
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: "gemini-2.5-flash-lite-latest",
       contents: message,
       config: {
-        tools: [{ googleSearch: {} }]
+        tools: [{ googleSearch: {} }, { googleMaps: {} }],
+        systemInstruction: "You are a luxury perfume concierge. Use Google Search and Maps to find stores, reviews, and latest trends."
       }
     });
 
     return {
-      text: response.text || "",
-      grounding: response.candidates?.[0]?.groundingMetadata?.groundingChunks || []
+      text: response.text || "No response",
+      grounding: response.candidates?.[0]?.groundingMetadata?.groundingChunks
     };
   } catch (e) {
-    return handleApiError(e);
+    console.error(e);
+    return { text: "Error fetching response." };
   }
 }
 
 /**
- * Helper to convert File to Base64
+ * Utility to convert file to base64 string
  */
 export async function fileToBtnBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -168,6 +172,6 @@ export async function fileToBtnBase64(file: File): Promise<string> {
       const base64String = (reader.result as string).split(',')[1];
       resolve(base64String);
     };
-    reader.onerror = (error) => reject(error);
+    reader.onerror = error => reject(error);
   });
 }

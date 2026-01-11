@@ -5,7 +5,7 @@ import PerfumeCard from './components/PerfumeCard';
 import LaunchSection from './components/LaunchSection';
 import { TRANSLATIONS as INITIAL_TRANSLATIONS, PERFUMES as INITIAL_PERFUMES, CONTACT_INFO as INITIAL_CONTACT } from './constants';
 
-// Lazy load components that are not critical for the initial paint
+// Lazy load non-critical components to ensure fast initial paint
 const AIAdvisor = lazy(() => import('./components/AIAdvisor'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
 
@@ -16,7 +16,7 @@ const App: React.FC = () => {
   const [contactInfo, setContactInfo] = useState(INITIAL_CONTACT);
 
   useEffect(() => {
-    // Quick load from local storage to prevent hydration mismatch and speed up personalized content
+    // Immediate recovery from local storage for high speed
     try {
       const savedPerfumes = localStorage.getItem('premium_perfumes_data');
       const savedTranslations = localStorage.getItem('premium_translations_data');
@@ -26,7 +26,7 @@ const App: React.FC = () => {
       if (savedTranslations) setTranslations(JSON.parse(savedTranslations));
       if (savedLinks) setContactInfo(JSON.parse(savedLinks));
     } catch (e) {
-      console.warn("Storage recovery failed", e);
+      console.error("Storage load error:", e);
     }
 
     const handleLang = (e: any) => setLang(e.detail);
@@ -34,18 +34,18 @@ const App: React.FC = () => {
     return () => window.removeEventListener('langChange', handleLang);
   }, []);
 
-  const t = (translations as any)[lang];
+  const t = (translations as any)[lang] || INITIAL_TRANSLATIONS[lang];
 
   return (
     <Layout>
-      {/* Hero Section - Critical Path */}
+      {/* Hero Section - Optimized for LCP */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#050505]">
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=60&w=1200" 
             className="w-full h-full object-cover opacity-40 brightness-50"
             alt="Luxury Fragrance"
-            fetchPriority="high"
+            style={{ contentVisibility: 'auto' }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]"></div>
         </div>
@@ -69,10 +69,6 @@ const App: React.FC = () => {
             </a>
           </div>
         </div>
-        
-        <div className="absolute bottom-10 left-10 hidden lg:block animate-fade-in opacity-30">
-           <p className="text-man-gold text-[10px] tracking-[0.3em] font-bold vertical-text uppercase">EST. 2024</p>
-        </div>
       </section>
 
       {/* Boutique Collection */}
@@ -95,7 +91,7 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="h-20 bg-[#050505]" />}>
         <AIAdvisor lang={lang} />
       </Suspense>
 
