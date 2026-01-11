@@ -1,6 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
-import { TRANSLATIONS } from '../constants';
+import React from 'react';
 
 interface PerfumeCardProps {
   perfume: any;
@@ -8,14 +7,6 @@ interface PerfumeCardProps {
 }
 
 const PerfumeCard: React.FC<PerfumeCardProps> = ({ perfume, contactInfo }) => {
-  const [lang, setLang] = useState<'uz' | 'ru'>('uz');
-
-  useEffect(() => {
-    const handleLang = (e: any) => setLang(e.detail);
-    window.addEventListener('langChange', handleLang);
-    return () => window.removeEventListener('langChange', handleLang);
-  }, []);
-
   const tgLink = `${contactInfo?.telegram || 'https://t.me/PremiumParfumes'}?text=${encodeURIComponent(`Salom! Men ${perfume.brand} ${perfume.name} haqida ma'lumot olmoqchi edim.`)}`;
 
   return (
@@ -35,4 +26,25 @@ const PerfumeCard: React.FC<PerfumeCardProps> = ({ perfume, contactInfo }) => {
           </div>
         </div>
 
-        <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+          <a 
+            href={tgLink}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-white text-black px-8 py-4 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-man-gold transition-colors"
+          >
+            ORDER NOW
+          </a>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <span className="text-man-gold font-black text-[10px] uppercase tracking-[0.4em]">{perfume.brand}</span>
+        <h3 className="text-2xl font-serif text-white tracking-tight group-hover:text-man-gold transition-colors">{perfume.name}</h3>
+        <p className="text-gray-500 text-xs font-light leading-relaxed line-clamp-2 uppercase tracking-widest">{perfume.description}</p>
+      </div>
+    </div>
+  );
+};
+
+export default PerfumeCard;

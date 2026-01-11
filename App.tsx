@@ -13,7 +13,6 @@ const App: React.FC = () => {
   const [contactInfo, setContactInfo] = useState(INITIAL_CONTACT);
 
   useEffect(() => {
-    // Load persisted data
     const savedPerfumes = localStorage.getItem('premium_perfumes_data');
     const savedTranslations = localStorage.getItem('premium_translations_data');
     const savedLinks = localStorage.getItem('premium_links_data');
@@ -37,7 +36,7 @@ const App: React.FC = () => {
           <img 
             src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=2000" 
             className="w-full h-full object-cover opacity-40 brightness-50"
-            alt="Masculine Hero Background"
+            alt="Hero Background"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]"></div>
         </div>
@@ -47,7 +46,7 @@ const App: React.FC = () => {
             <span className="text-man-gold font-bold tracking-[0.8em] text-[10px] uppercase block animate-fade-in">PREMIUM PARFUMES</span>
           </div>
           <h1 className="text-6xl md:text-[120px] font-serif text-white mb-10 leading-none tracking-tighter animate-slide-up whitespace-pre-line">
-            {t.heroTitle.includes(' ') && t.heroTitle.length > 20 ? t.heroTitle.replace(' ', '\n') : t.heroTitle}
+            {t.heroTitle}
           </h1>
           <p className="text-gray-400 text-sm md:text-xl font-light mb-14 tracking-widest uppercase max-w-2xl mx-auto">
             {t.heroSub}
