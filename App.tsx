@@ -1,10 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Layout from './components/Layout';
 import PerfumeCard from './components/PerfumeCard';
 import LaunchSection from './components/LaunchSection';
-import AdminPanel from './components/AdminPanel';
 import { TRANSLATIONS as INITIAL_TRANSLATIONS, PERFUMES as INITIAL_PERFUMES, CONTACT_INFO as INITIAL_CONTACT } from './constants';
+
+// Lazy load components that are not critical for the initial paint
+const AIAdvisor = lazy(() => import('./components/AIAdvisor'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<'uz' | 'ru'>('uz');
@@ -13,14 +16,18 @@ const App: React.FC = () => {
   const [contactInfo, setContactInfo] = useState(INITIAL_CONTACT);
 
   useEffect(() => {
-    // Persistent storage for user edits via Admin Panel
-    const savedPerfumes = localStorage.getItem('premium_perfumes_data');
-    const savedTranslations = localStorage.getItem('premium_translations_data');
-    const savedLinks = localStorage.getItem('premium_links_data');
-    
-    if (savedPerfumes) setPerfumes(JSON.parse(savedPerfumes));
-    if (savedTranslations) setTranslations(JSON.parse(savedTranslations));
-    if (savedLinks) setContactInfo(JSON.parse(savedLinks));
+    // Quick load from local storage to prevent hydration mismatch and speed up personalized content
+    try {
+      const savedPerfumes = localStorage.getItem('premium_perfumes_data');
+      const savedTranslations = localStorage.getItem('premium_translations_data');
+      const savedLinks = localStorage.getItem('premium_links_data');
+      
+      if (savedPerfumes) setPerfumes(JSON.parse(savedPerfumes));
+      if (savedTranslations) setTranslations(JSON.parse(savedTranslations));
+      if (savedLinks) setContactInfo(JSON.parse(savedLinks));
+    } catch (e) {
+      console.warn("Storage recovery failed", e);
+    }
 
     const handleLang = (e: any) => setLang(e.detail);
     window.addEventListener('langChange', handleLang);
@@ -31,13 +38,14 @@ const App: React.FC = () => {
 
   return (
     <Layout>
-      {/* Hero Section */}
+      {/* Hero Section - Critical Path */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#050505]">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=2000" 
+            src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=60&w=1200" 
             className="w-full h-full object-cover opacity-40 brightness-50"
             alt="Luxury Fragrance"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]"></div>
         </div>
@@ -46,7 +54,7 @@ const App: React.FC = () => {
           <div className="mb-8 inline-block overflow-hidden">
             <span className="text-man-gold font-bold tracking-[0.8em] text-[10px] uppercase block animate-fade-in">PREMIUM PARFUMES</span>
           </div>
-          <h1 className="text-6xl md:text-[100px] font-serif text-white mb-10 leading-none tracking-tighter animate-slide-up">
+          <h1 className="text-5xl md:text-[100px] font-serif text-white mb-10 leading-none tracking-tighter animate-slide-up">
             {t.heroTitle}
           </h1>
           <p className="text-gray-400 text-sm md:text-xl font-light mb-14 tracking-widest uppercase max-w-2xl mx-auto">
@@ -87,9 +95,15 @@ const App: React.FC = () => {
         </div>
       </section>
 
+      <Suspense fallback={null}>
+        <AIAdvisor lang={lang} />
+      </Suspense>
+
       <LaunchSection lang={lang} contactInfo={contactInfo} />
 
-      <AdminPanel />
+      <Suspense fallback={null}>
+        <AdminPanel />
+      </Suspense>
     </Layout>
   );
 };

@@ -1,7 +1,5 @@
 {
-  "name": "Copy of Premium Parfumes",
-  "description": "A luxury perfume boutique offering exquisite scents, personalized fragrance recommendations using Gemini AI, and easy access via social media.",
-  "requestFramePermissions": [
-    "camera"
-  ]
+  "name": "Premium Parfumes Elite",
+  "description": "A luxury perfume boutique offering exquisite scents and personalized fragrance recommendations using Gemini AI.",
+  "requestFramePermissions": []
 }

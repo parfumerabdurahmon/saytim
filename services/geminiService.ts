@@ -3,6 +3,12 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 /**
  * Service for handling Gemini API interactions securely.
+ * Models used: 
+ * - gemini-3-pro-preview (Complex reasoning, Recommendations)
+ * - gemini-3-pro-image-preview (High-quality Image Gen)
+ * - gemini-2.5-flash-image (Image Editing)
+ * - veo-3.1-fast-generate-preview (Video Generation)
+ * - gemini-3-flash-preview (Grounded Search)
  */
 
 export const isKeyNotFoundError = (error: any) => {
@@ -29,7 +35,7 @@ export async function getPerfumeRecommendation(prompt: string): Promise<string> 
       model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
-        systemInstruction: "You are a luxury perfume consultant for 'Premium Parfumes'. Provide concise, elegant fragrance advice for modern men.",
+        systemInstruction: "You are a luxury perfume consultant for 'Premium Parfumes'. Provide concise, elegant fragrance advice for modern men. Be professional and sophisticated.",
       }
     });
     return response.text || "No recommendation found.";
@@ -121,7 +127,6 @@ export async function generateVeoVideo(prompt: string, imageBase64?: string, asp
     const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
     if (!downloadLink) return null;
     
-    // Returning the link with key as specified in guidelines
     return `${downloadLink}&key=${process.env.API_KEY}`;
   } catch (e) {
     return handleApiError(e);
@@ -129,17 +134,17 @@ export async function generateVeoVideo(prompt: string, imageBase64?: string, asp
 }
 
 /**
- * Handles grounded chat with Google Search and Maps
+ * Handles grounded chat with Google Search
  */
 export async function getGroundedChatResponse(message: string): Promise<{ text: string, grounding: any[] }> {
   if (!process.env.API_KEY) return { text: "API Key missing", grounding: [] };
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-lite-latest',
+      model: 'gemini-3-flash-preview',
       contents: message,
       config: {
-        tools: [{ googleSearch: {} }, { googleMaps: {} }]
+        tools: [{ googleSearch: {} }]
       }
     });
 
