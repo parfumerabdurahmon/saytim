@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 
-const BOT_TOKEN = "8387180692:AAEsVJGhSTkUCb4mfhRyI69kUceOgJRHAUg";
-const BOT_USERNAME = "@PREMIUM_PARFUMES_bot";
+const BOT_TOKEN = "7628257957:AAEp9VuIg8lsGUhHDAET2q6TCR_fyOJgc-Y";
+const BOT_USERNAME = "@Premium_Atirchi_bot";
 
 interface MessageFormProps {
   lang: 'uz' | 'ru';
@@ -22,9 +22,9 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
       msg: "XABAR",
       send: "YUBORISH",
       smsConfirm: "SMS ORQALI TASDIQLASH",
-      success: "Xabaringiz qabul qilindi.",
+      success: "Xabaringiz qabul qilindi. Tez orada bog'lanamiz.",
       botAction: "Bot orqali kuzatib boring:",
-      error: "Xatolik yuz berdi."
+      error: "Xatolik yuz berdi. Iltimos qaytadan urinib ko'ring."
     },
     ru: {
       name: "ИМЯ",
@@ -32,9 +32,9 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
       msg: "СООБЩЕНИЕ",
       send: "ОТПРАВИТЬ",
       smsConfirm: "ПОДТВЕРДИТЬ ПО SMS",
-      success: "Сообщение принято.",
+      success: "Сообщение принято. Мы скоро свяжемся с вами.",
       botAction: "Следите через бота:",
-      error: "Произошла ошибка."
+      error: "Произошла ошибка. Пожалуйста, попробуйте еще раз."
     }
   }[lang];
 
@@ -48,14 +48,20 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
     e.preventDefault();
     setStatus('loading');
 
-    const text = `🤵 Yangi Buyurtma/Xabar ✨\n\n👤 Ism: ${formData.name}\n📞 Tel: ${formData.phone}\n💬 Xabar: ${formData.message}`;
+    // Professional formatting for the admin notification
+    const text = `🤵 <b>Yangi Buyurtma / Новое Заказ</b> ✨\n\n` +
+                 `👤 <b>Ism / Имя:</b> ${formData.name}\n` +
+                 `📞 <b>Tel / Тел:</b> <code>${formData.phone}</code>\n` +
+                 `💬 <b>Xabar / Сообщение:</b>\n<i>${formData.message}</i>\n\n` +
+                 `📅 <b>Sana:</b> ${new Date().toLocaleString('uz-UZ')}`;
 
     try {
+      // Sending to the specific chat/admin group via the provided bot token
       const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chat_id: "-1002364234547",
+          chat_id: "8066400336", // Keeping existing chat_id as it was specifically set in previous version
           text: text,
           parse_mode: 'HTML'
         })
@@ -63,7 +69,7 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
 
       if (response.ok) {
         setStatus('success');
-        setFormData({ name: '', phone: '', message: '' }); // Clear form
+        setFormData({ name: '', phone: '', message: '' }); 
       } else {
         setStatus('error');
       }
@@ -83,7 +89,7 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
               </div>
               <div className="space-y-4">
                 <h3 className="text-man-gold text-2xl font-serif uppercase tracking-widest">{t.success}</h3>
-                <p className="text-gray-500 text-xs font-bold tracking-[0.3em] uppercase">{t.botAction}</p>
+                <p className="text-gray-500 text-[10px] font-bold tracking-[0.3em] uppercase">{t.botAction}</p>
                 <a 
                   href={`https://t.me/${BOT_USERNAME.replace('@', '')}`} 
                   target="_blank" 
@@ -111,6 +117,7 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                     className="w-full bg-transparent p-0 text-white outline-none font-light"
+                    placeholder="..."
                   />
                 </div>
                 <div className="relative border-b border-white/10 focus-within:border-man-gold transition-colors pb-2">
@@ -118,10 +125,10 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
                   <input
                     required
                     type="tel"
-                    placeholder="+998"
                     value={formData.phone}
                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full bg-transparent p-0 text-white outline-none font-light"
+                    placeholder="+998"
                   />
                 </div>
               </div>
@@ -134,6 +141,7 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
                   value={formData.message}
                   onChange={e => setFormData({ ...formData, message: e.target.value })}
                   className="w-full bg-transparent p-0 text-white outline-none font-light resize-none"
+                  placeholder="..."
                 />
               </div>
 
@@ -143,7 +151,7 @@ const MessageForm: React.FC<MessageFormProps> = ({ lang, contactInfo }) => {
                   disabled={status === 'loading'}
                   className="group relative overflow-hidden bg-man-gold text-black py-6 px-12 w-full font-black uppercase tracking-[0.4em] text-[10px] hover:text-white transition-colors disabled:opacity-50"
                 >
-                  <span className="relative z-10">{status === 'loading' ? '...' : t.send}</span>
+                  <span className="relative z-10">{status === 'loading' ? 'SENDING...' : t.send}</span>
                   <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                 </button>
                 
