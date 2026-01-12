@@ -3,8 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { PERFUMES } from '../constants';
 
-const ai = new GoogleGenAI({ apiKey:"AIzaSyC2hTHOykf_sKdyN7wdWZBGV5JZ33eqh6E" });
-
 interface TalkingAIProps {
   lang: 'uz' | 'ru';
 }
@@ -19,17 +17,19 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
   const t = {
     uz: {
       title: "Scent Strategist",
-      subtitle: "AI Ekspert / AI Эксперт",
+      subtitle: "AI Ekspert",
       placeholder: "Xarakteringizni ayting...",
       send: "YUBORISH",
-      greeting: "Assalomu alaykum. Men sizning shaxsiy parfyumeriya bo'yicha maslahatdoshingizman. Qanday hid sizga mos kelishini aniqlaymiz?"
+      greeting: "Assalomu alaykum. Men sizning shaxsiy parfyumeriya bo'yicha maslahatdoshingizman. Qanday hid sizga mos kelishini aniqlaymiz?",
+      error: "Kechirasiz, aloqada xatolik yuz berdi."
     },
     ru: {
       title: "Scent Strategist",
       subtitle: "AI Эксперт",
       placeholder: "Опишите ваш характер...",
       send: "ОТПРАВИТЬ",
-      greeting: "Здравствуйте. Я ваш персональный консультант по парфюмерии. Давайте подберем аромат, который подчеркнет вашу индивидуальность."
+      greeting: "Здравствуйте. Я ваш персональный консультант по парфюмерии. Давайте подберем аромат, который подчеркнет вашу индивидуальность.",
+      error: "Извините, произошла ошибка связи."
     }
   }[lang];
 
@@ -38,6 +38,10 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isTyping]);
+
+  const handleOpenChat = () => {
+    setIsOpen(true);
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
@@ -54,6 +58,9 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
     Focus on matching the user's mood, occasion, or preference with one of the perfumes from the Arsenal.`;
 
     try {
+      // Use process.env.API_KEY directly as required.
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      
       const chat = ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: { systemInstruction }
@@ -73,9 +80,9 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
           return updated;
         });
       }
-    } catch (error) {
-      console.error("AI Error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: lang === 'uz' ? "Kechirasiz, aloqada xatolik yuz berdi." : "Извините, произошла ошибка связи." }]);
+    } catch (error: any) {
+      console.error("AI Communication Error:", error);
+      setMessages(prev => [...prev, { role: 'model', text: t.error }]);
     } finally {
       setIsTyping(false);
     }
@@ -84,11 +91,11 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
   return (
     <>
       <button 
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpenChat}
         className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[9999] group flex items-center gap-4 bg-man-gold p-1 shadow-[0_10px_40px_rgba(197,160,89,0.4)] rounded-full transition-all hover:scale-105 active:scale-95"
       >
         <div className="w-14 h-14 bg-black rounded-full flex items-center justify-center border border-man-gold/20">
-          <i className="fas fa-comment-dots text-man-gold text-xl"></i>
+          <i className="fas fa-robot text-man-gold text-xl"></i>
         </div>
         <span className="hidden md:block pr-6 text-[10px] font-black uppercase tracking-widest text-black">{t.title}</span>
       </button>
