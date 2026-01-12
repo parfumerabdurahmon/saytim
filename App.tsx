@@ -12,6 +12,7 @@ const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const App: React.FC = () => {
   const [lang, setLang] = useState<'uz' | 'ru'>('uz');
   const [perfumes, setPerfumes] = useState(INITIAL_PERFUMES);
+  const [searchQuery, setSearchQuery] = useState('');
   const [translations, setTranslations] = useState(INITIAL_TRANSLATIONS);
   const [contactInfo, setContactInfo] = useState(INITIAL_CONTACT);
 
@@ -31,8 +32,14 @@ const App: React.FC = () => {
 
   const t = (translations as any)[lang] || INITIAL_TRANSLATIONS[lang];
 
+  const filteredPerfumes = perfumes.filter(p => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <Layout>
+    <Layout onSearch={setSearchQuery}>
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-luxury-dark">
         <div className="absolute inset-0 z-0">
           <img 
@@ -65,9 +72,21 @@ const App: React.FC = () => {
               <h2 className="text-5xl font-serif text-white tracking-tighter uppercase">{t.boutiqueColl}</h2>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-24">
-            {perfumes.map(p => <PerfumeCard key={p.id} perfume={p} contactInfo={contactInfo} />)}
-          </div>
+
+          {filteredPerfumes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-24">
+              {filteredPerfumes.map(p => <PerfumeCard key={p.id} perfume={p} contactInfo={contactInfo} />)}
+            </div>
+          ) : (
+            <div className="py-32 text-center border border-white/5 bg-white/[0.02]">
+              <div className="w-16 h-16 border border-man-gold/20 flex items-center justify-center mx-auto mb-6">
+                <i className="fas fa-search text-man-gold/40"></i>
+              </div>
+              <p className="text-gray-500 font-serif tracking-widest uppercase text-xs">
+                {lang === 'uz' ? 'Hech narsa topilmadi' : 'Ничего не найдено'}
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
