@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CONTACT_INFO as INITIAL_CONTACT, TRANSLATIONS as INITIAL_TRANSLATIONS } from '../constants';
 
 interface LayoutProps {
@@ -9,8 +9,10 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, onSearch }) => {
   const [lang, setLang] = useState<'uz' | 'ru'>('uz');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [contactInfo, setContactInfo] = useState(INITIAL_CONTACT);
   const [translations, setTranslations] = useState(INITIAL_TRANSLATIONS);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const savedLinks = localStorage.getItem('premium_links_data');
@@ -23,32 +25,47 @@ const Layout: React.FC<LayoutProps> = ({ children, onSearch }) => {
     return () => window.removeEventListener('langChange', handleLang);
   }, []);
 
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
+
   const t = (translations as any)[lang] || INITIAL_TRANSLATIONS[lang];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#050505] text-white">
       <header className="fixed top-0 w-full z-50 bg-[#050505]/95 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-20 md:h-24 flex items-center justify-between gap-4">
-          <div className="flex items-center space-x-3 md:space-x-4 group cursor-pointer shrink-0" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+          
+          <div className={`flex items-center space-x-3 md:space-x-4 group cursor-pointer shrink-0 transition-opacity duration-300 ${isSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'}`} onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
             <div className="w-8 h-8 md:w-10 md:h-10 bg-man-gold flex items-center justify-center relative overflow-hidden">
                <i className="fas fa-crown text-black text-sm md:text-xl relative z-10"></i>
             </div>
-            <span className="hidden sm:inline text-lg md:text-2xl font-serif font-bold tracking-tighter uppercase transition-colors duration-500 group-hover:text-man-gold">PREMIUM PARFUMES</span>
+            <span className="text-lg md:text-2xl font-serif font-bold tracking-tighter uppercase transition-colors duration-500 group-hover:text-man-gold">PREMIUM PARFUMES</span>
           </div>
           
-          <div className="flex-1 max-w-sm md:max-w-md">
-            <div className="relative group">
-              <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 text-[10px] group-focus-within:text-man-gold transition-colors"></i>
+          <div className={`flex-1 transition-all duration-500 ease-in-out flex items-center justify-end ${isSearchOpen ? 'max-w-full pl-0' : 'max-w-[40px] md:max-w-[100px]'}`}>
+            <div className={`relative flex items-center transition-all duration-500 border-b ${isSearchOpen ? 'w-full border-man-gold/40' : 'w-10 border-transparent'}`}>
+              <button 
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                className={`w-10 h-10 flex items-center justify-center transition-colors hover:text-man-gold ${isSearchOpen ? 'text-man-gold' : 'text-gray-500'}`}
+              >
+                <i className={`fas ${isSearchOpen ? 'fa-xmark' : 'fa-magnifying-glass'} text-sm md:text-base`}></i>
+              </button>
+              
               <input 
+                ref={searchInputRef}
                 type="text" 
                 onChange={(e) => onSearch?.(e.target.value)}
-                placeholder={lang === 'uz' ? 'QIDIRISH...' : 'ПОИСК...'}
-                className="w-full bg-white/5 border border-white/10 py-3 pl-10 pr-4 text-[9px] font-black tracking-[0.2em] uppercase outline-none focus:border-man-gold/50 focus:bg-white/10 transition-all placeholder:text-gray-800 text-white"
+                onBlur={() => { if (!searchInputRef.current?.value) setIsSearchOpen(false); }}
+                placeholder={lang === 'uz' ? 'HIDNI QIDIRISH...' : 'ПОИСК АРОМАТА...'}
+                className={`bg-transparent py-3 pr-4 text-[10px] font-black tracking-[0.25em] uppercase outline-none transition-all duration-500 placeholder:text-gray-800 text-white ${isSearchOpen ? 'flex-1 opacity-100 pl-4' : 'w-0 opacity-0 overflow-hidden'}`}
               />
             </div>
           </div>
 
-          <div className="flex items-center space-x-4 md:space-x-8 shrink-0">
+          <div className={`flex items-center space-x-4 md:space-x-8 shrink-0 transition-opacity duration-300 ${isSearchOpen ? 'hidden md:flex opacity-30 pointer-events-none' : 'opacity-100'}`}>
             <nav className="hidden lg:flex space-x-12 text-[10px] font-black tracking-[0.3em] uppercase">
               <a href="#collection" className="text-gray-400 hover:text-man-gold transition-colors">{t.collection}</a>
             </nav>
