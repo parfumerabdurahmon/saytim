@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { PERFUMES } from '../constants';
+import { PERFUMES as INITIAL_PERFUMES } from '../constants';
 
 interface TalkingAIProps {
   lang: 'uz' | 'ru';
@@ -21,7 +21,7 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
       placeholder: "Xarakteringizni ayting...",
       send: "YUBORISH",
       greeting: "Assalomu alaykum. Men sizning shaxsiy parfyumeriya bo'yicha maslahatdoshingizman. Qanday hid sizga mos kelishini aniqlaymiz?",
-      error: "Kechirasiz, aloqada xatolik yuz berdi."
+      error: "Kechirasiz, Strategist hozirda band. Iltimos, birozdan so'ng urinib ko'ring."
     },
     ru: {
       title: "Scent Strategist",
@@ -29,7 +29,7 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
       placeholder: "Опишите ваш характер...",
       send: "ОТПРАВИТЬ",
       greeting: "Здравствуйте. Я ваш персональный консультант по парфюмерии. Давайте подберем аромат, который подчеркнет вашу индивидуальность.",
-      error: "Извините, произошла ошибка связи."
+      error: "Извините, Стратег сейчас занят. Пожалуйста, попробуйте чуть позже."
     }
   }[lang];
 
@@ -39,10 +39,6 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
     }
   }, [messages, isTyping]);
 
-  const handleOpenChat = () => {
-    setIsOpen(true);
-  };
-
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
 
@@ -51,37 +47,40 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsTyping(true);
 
-    const systemInstruction = `You are a world-class luxury perfume advisor for "Premium Parfumes". 
-    Your tone is sophisticated, masculine, and helpful. 
-    Current Arsenal (Perfumes you can recommend): ${PERFUMES.map(p => `${p.brand} ${p.name}: ${p.description}`).join('; ')}.
-    Answer in ${lang === 'uz' ? 'Uzbek' : 'Russian'}. 
-    Focus on matching the user's mood, occasion, or preference with one of the perfumes from the Arsenal.`;
+    const savedPerfumes = localStorage.getItem('premium_perfumes_data');
+    const currentPerfumes = savedPerfumes ? JSON.parse(savedPerfumes) : INITIAL_PERFUMES;
+    const arsenalString = currentPerfumes.map((p: any) => `${p.brand} ${p.name}: ${p.description}`).join('; ');
 
     try {
-      // Use process.env.API_KEY directly as required.
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      // Use the provided API KEY from environment
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
       
-      const chat = ai.chats.create({
+      const systemInstruction = `You are the "Scent Strategist", a world-class luxury perfume advisor for "Premium Parfumes Elite". 
+      Tone: Sophisticated, masculine, exclusive, and highly professional.
+      Your Goal: Recommend the perfect fragrance from the available Arsenal based on user preferences, personality, or occasion.
+      Arsenal Inventory: ${arsenalString}.
+      Language Policy: Respond exclusively in ${lang === 'uz' ? 'Uzbek' : 'Russian'}.
+      Rules:
+      1. Always suggest at least one specific perfume from the Arsenal above.
+      2. Explain why it fits the user's description (e.g., "This woody scent matches your leadership qualities").
+      3. Be concise but evocative. Use words that convey luxury and power.
+      4. If the user asks for something not in the Arsenal, suggest the closest available alternative.`;
+
+      const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        config: { systemInstruction }
+        contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+        config: {
+          systemInstruction,
+          temperature: 0.7,
+          topP: 0.95,
+        },
       });
 
-      const result = await chat.sendMessageStream({ message: userMsg });
-      let fullText = '';
+      const replyText = response.text || (lang === 'uz' ? "Kechirasiz, Strategiya tuzishda xatolik yuz berdi." : "Извините, произошла ошибка при составлении стратегии.");
       
-      setMessages(prev => [...prev, { role: 'model', text: '' }]);
-
-      for await (const chunk of result) {
-        const text = chunk.text;
-        fullText += text;
-        setMessages(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1].text = fullText;
-          return updated;
-        });
-      }
+      setMessages(prev => [...prev, { role: 'model', text: replyText }]);
     } catch (error: any) {
-      console.error("AI Communication Error:", error);
+      console.error("Gemini AI Error:", error);
       setMessages(prev => [...prev, { role: 'model', text: t.error }]);
     } finally {
       setIsTyping(false);
@@ -91,7 +90,7 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
   return (
     <>
       <button 
-        onClick={handleOpenChat}
+        onClick={() => setIsOpen(true)}
         className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-[9999] group flex items-center gap-4 bg-man-gold p-1 shadow-[0_10px_40px_rgba(197,160,89,0.4)] rounded-full transition-all hover:scale-105 active:scale-95"
       >
         <div className="w-14 h-14 bg-black rounded-full flex items-center justify-center border border-man-gold/20">
@@ -135,7 +134,7 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
                   </div>
                   <div className={`p-4 rounded-2xl text-xs leading-relaxed max-w-[85%] border ${
                     m.role === 'user' 
-                      ? 'bg-man-gold/10 border-man-gold/20 text-white rounded-tr-none' 
+                      ? 'bg-man-gold/10 border-man-gold/20 text-white rounded-tr-none shadow-[0_0_15px_rgba(197,160,89,0.05)]' 
                       : 'bg-white/5 border-white/5 text-gray-300 rounded-tl-none'
                   }`}>
                     {m.text}
@@ -149,9 +148,9 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
                     <i className="fas fa-crown text-man-gold/40 text-[10px]"></i>
                   </div>
                   <div className="bg-white/5 px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-1">
-                    <div className="w-1 h-1 bg-man-gold rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                    <div className="w-1 h-1 bg-man-gold rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="w-1 h-1 bg-man-gold rounded-full animate-bounce"></div>
+                    <div className="w-1.5 h-1.5 bg-man-gold rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-1.5 h-1.5 bg-man-gold rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-1.5 h-1.5 bg-man-gold rounded-full animate-bounce"></div>
                   </div>
                 </div>
               )}
@@ -165,14 +164,14 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder={t.placeholder}
-                  className="flex-1 bg-white/5 border border-white/10 p-4 rounded-full text-xs text-white outline-none focus:border-man-gold transition-colors placeholder:text-gray-700"
+                  className="flex-1 bg-white/5 border border-white/10 p-4 rounded-full text-xs text-white outline-none focus:border-man-gold transition-colors placeholder:text-gray-700 font-light"
                 />
                 <button 
                   onClick={handleSend}
                   disabled={!input.trim() || isTyping}
-                  className="w-12 h-12 bg-man-gold rounded-full flex items-center justify-center text-black hover:bg-white transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(197,160,89,0.3)]"
+                  className="w-12 h-12 bg-man-gold rounded-full flex items-center justify-center text-black hover:bg-white transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(197,160,89,0.3)] group"
                 >
-                  <i className="fas fa-paper-plane"></i>
+                  <i className="fas fa-paper-plane group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
                 </button>
               </div>
             </div>
