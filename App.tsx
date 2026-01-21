@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import PerfumeCard from './components/PerfumeCard';
 import LaunchSection from './components/LaunchSection';
 import TalkingAI from './components/TalkingAI';
+import { dataService } from './services/dataService';
 import { TRANSLATIONS as INITIAL_TRANSLATIONS, PERFUMES as INITIAL_PERFUMES, CONTACT_INFO as INITIAL_CONTACT } from './constants';
 
 const MessageForm = lazy(() => import('./components/MessageForm'));
@@ -12,25 +13,36 @@ const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const App: React.FC = () => {
   const [lang, setLang] = useState<'uz' | 'ru'>('uz');
   const [perfumes, setPerfumes] = useState(INITIAL_PERFUMES);
-  const [searchQuery, setSearchQuery] = useState('');
   const [translations, setTranslations] = useState(INITIAL_TRANSLATIONS);
   const [contactInfo, setContactInfo] = useState(INITIAL_CONTACT);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedPerfumes = localStorage.getItem('premium_perfumes_data');
-    const savedTranslations = localStorage.getItem('premium_translations_data');
-    const savedLinks = localStorage.getItem('premium_links_data');
-    
-    if (savedPerfumes) setPerfumes(JSON.parse(savedPerfumes));
-    if (savedTranslations) setTranslations(JSON.parse(savedTranslations));
-    if (savedLinks) setContactInfo(JSON.parse(savedLinks));
+    const init = async () => {
+      const data = await dataService.getSiteData();
+      setPerfumes(data.perfumes);
+      setTranslations(data.translations);
+      setContactInfo(data.contacts);
+      setIsLoading(false);
+    };
+    init();
 
     const handleLang = (e: any) => setLang(e.detail);
     window.addEventListener('langChange', handleLang);
     return () => window.removeEventListener('langChange', handleLang);
   }, []);
 
-  const t = (translations as any)[lang] || INITIAL_TRANSLATIONS[lang];
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-black flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-2 border-man-gold border-t-transparent rounded-full animate-spin mb-4"></div>
+        <span className="text-man-gold font-serif tracking-[0.3em] uppercase text-[10px]">Synchronizing Arsenal...</span>
+      </div>
+    );
+  }
+
+  const t = (translations as any)[lang];
 
   const filteredPerfumes = perfumes.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
