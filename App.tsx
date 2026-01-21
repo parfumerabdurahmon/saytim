@@ -91,7 +91,7 @@ const App: React.FC = () => {
       </section>
 
       <Suspense fallback={<div className="h-20" />}>
-        <LaunchSection lang={lang} contactInfo={contactInfo} />
+        <LaunchSection lang={lang} contactInfo={contactInfo} translations={translations} />
         <MessageForm lang={lang} contactInfo={contactInfo} />
         <AdminPanel />
       </Suspense>

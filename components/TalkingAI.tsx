@@ -52,35 +52,31 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
     const arsenalString = currentPerfumes.map((p: any) => `${p.brand} ${p.name}: ${p.description}`).join('; ');
 
     try {
-      // Use the provided API KEY from environment
+      // Use standard naming and parameter for world-class initialization
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
       
       const systemInstruction = `You are the "Scent Strategist", a world-class luxury perfume advisor for "Premium Parfumes Elite". 
-      Tone: Sophisticated, masculine, exclusive, and highly professional.
-      Your Goal: Recommend the perfect fragrance from the available Arsenal based on user preferences, personality, or occasion.
-      Arsenal Inventory: ${arsenalString}.
-      Language Policy: Respond exclusively in ${lang === 'uz' ? 'Uzbek' : 'Russian'}.
-      Rules:
-      1. Always suggest at least one specific perfume from the Arsenal above.
-      2. Explain why it fits the user's description (e.g., "This woody scent matches your leadership qualities").
-      3. Be concise but evocative. Use words that convey luxury and power.
-      4. If the user asks for something not in the Arsenal, suggest the closest available alternative.`;
+      Tone: Sophisticated, masculine, exclusive, and professional.
+      Task: Recommend perfumes from the available Arsenal. 
+      Arsenal Data: ${arsenalString}.
+      Language: ${lang === 'uz' ? 'Uzbek' : 'Russian'}.
+      Strategy: Analyze user's mood, character or occasion. Recommend specific items from Arsenal. Be authoritative and brief.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: userMsg }] }],
         config: {
           systemInstruction,
-          temperature: 0.7,
+          temperature: 0.8,
           topP: 0.95,
         },
       });
 
-      const replyText = response.text || (lang === 'uz' ? "Kechirasiz, Strategiya tuzishda xatolik yuz berdi." : "Извините, произошла ошибка при составлении стратегии.");
+      const replyText = response.text || (lang === 'uz' ? "Kechirasiz, javob topilmadi." : "Извините, ответ не найден.");
       
       setMessages(prev => [...prev, { role: 'model', text: replyText }]);
     } catch (error: any) {
-      console.error("Gemini AI Error:", error);
+      console.error("AI Advisor Error:", error);
       setMessages(prev => [...prev, { role: 'model', text: t.error }]);
     } finally {
       setIsTyping(false);
@@ -134,7 +130,7 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
                   </div>
                   <div className={`p-4 rounded-2xl text-xs leading-relaxed max-w-[85%] border ${
                     m.role === 'user' 
-                      ? 'bg-man-gold/10 border-man-gold/20 text-white rounded-tr-none shadow-[0_0_15px_rgba(197,160,89,0.05)]' 
+                      ? 'bg-man-gold/10 border-man-gold/20 text-white rounded-tr-none' 
                       : 'bg-white/5 border-white/5 text-gray-300 rounded-tl-none'
                   }`}>
                     {m.text}
@@ -148,9 +144,9 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
                     <i className="fas fa-crown text-man-gold/40 text-[10px]"></i>
                   </div>
                   <div className="bg-white/5 px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 bg-man-gold rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                    <div className="w-1.5 h-1.5 bg-man-gold rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="w-1.5 h-1.5 bg-man-gold rounded-full animate-bounce"></div>
+                    <div className="w-1 h-1 bg-man-gold rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-1 h-1 bg-man-gold rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-1 h-1 bg-man-gold rounded-full animate-bounce"></div>
                   </div>
                 </div>
               )}
@@ -164,14 +160,14 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder={t.placeholder}
-                  className="flex-1 bg-white/5 border border-white/10 p-4 rounded-full text-xs text-white outline-none focus:border-man-gold transition-colors placeholder:text-gray-700 font-light"
+                  className="flex-1 bg-white/5 border border-white/10 p-4 rounded-full text-xs text-white outline-none focus:border-man-gold transition-colors placeholder:text-gray-700"
                 />
                 <button 
                   onClick={handleSend}
                   disabled={!input.trim() || isTyping}
-                  className="w-12 h-12 bg-man-gold rounded-full flex items-center justify-center text-black hover:bg-white transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(197,160,89,0.3)] group"
+                  className="w-12 h-12 bg-man-gold rounded-full flex items-center justify-center text-black hover:bg-white transition-colors disabled:opacity-50 shadow-[0_0_20px_rgba(197,160,89,0.3)]"
                 >
-                  <i className="fas fa-paper-plane group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                  <i className="fas fa-paper-plane"></i>
                 </button>
               </div>
             </div>

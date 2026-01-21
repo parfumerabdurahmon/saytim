@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PERFUMES as INITIAL_PERFUMES, TRANSLATIONS as INITIAL_TRANSLATIONS, CONTACT_INFO as INITIAL_CONTACT } from '../constants';
 import { ExtendedPerfume } from '../constants';
 
@@ -67,6 +67,21 @@ const AdminPanel: React.FC = () => {
     setPerfumes(perfumes.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
 
+  const handleImageUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024 * 3) {
+        alert("Rasm juda katta (max 3MB). / Файл слишком большой (макс 3МБ).");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateProduct(id, 'image', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   if (!isOpen) return (
     <button 
       onClick={() => setIsOpen(true)} 
@@ -84,7 +99,7 @@ const AdminPanel: React.FC = () => {
           <div className="w-16 h-16 border border-man-gold flex items-center justify-center mx-auto mb-8">
             <i className="fas fa-shield-halved text-man-gold text-2xl"></i>
           </div>
-          <h2 className="text-xl font-serif mb-8 tracking-widest uppercase">Elite Access</h2>
+          <h2 className="text-xl font-serif mb-8 tracking-widest uppercase text-white">Elite Access</h2>
           <input 
             type="password" 
             placeholder="ACCESS KEY"
@@ -142,34 +157,61 @@ const AdminPanel: React.FC = () => {
                         <i className="fas fa-trash-can"></i>
                       </button>
                       <div className="flex flex-col md:flex-row gap-8">
-                        <div className="w-full md:w-32 aspect-[3/4] bg-black border border-white/10 overflow-hidden">
-                          <img src={p.image} className="w-full h-full object-cover grayscale" alt="" />
+                        <div className="w-full md:w-40 aspect-[3/4] bg-black border border-white/10 overflow-hidden relative group/img">
+                          <img src={p.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" alt="" />
+                          <label className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                            <i className="fas fa-camera text-white text-xl"></i>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              className="hidden" 
+                              onChange={(e) => handleImageUpload(p.id, e)}
+                            />
+                          </label>
                         </div>
                         <div className="flex-1 space-y-4">
                           <div className="space-y-1">
-                            <label className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Brand</label>
-                            <input 
-                              className="w-full bg-transparent border-b border-white/10 text-man-gold uppercase text-xs font-black outline-none focus:border-man-gold py-1" 
-                              value={p.brand} 
-                              onChange={e => updateProduct(p.id, 'brand', e.target.value)}
-                            />
+                            <label className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Category</label>
+                            <select 
+                              className="w-full bg-black border border-white/10 p-2 text-[10px] text-white outline-none focus:border-man-gold"
+                              value={p.category}
+                              onChange={e => updateProduct(p.id, 'category', e.target.value)}
+                            >
+                              <option value="Woody">Woody</option>
+                              <option value="Floral">Floral</option>
+                              <option value="Fresh">Fresh</option>
+                              <option value="Oriental">Oriental</option>
+                              <option value="Citrus">Citrus</option>
+                            </select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Model Name</label>
+                            <label className="text-[8px] text-gray-600 uppercase font-black tracking-widest">ID (Unique)</label>
                             <input 
-                              className="w-full bg-transparent border-b border-white/10 text-white font-serif text-lg outline-none focus:border-man-gold py-1" 
-                              value={p.name} 
-                              onChange={e => updateProduct(p.id, 'name', e.target.value)}
+                              className="w-full bg-transparent border-b border-white/10 text-gray-500 text-[10px] outline-none py-1" 
+                              value={p.id} 
+                              readOnly
                             />
                           </div>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div className="space-y-1">
-                          <label className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Image URL</label>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="text-[8px] text-gray-600 uppercase font-black tracking-widest">Image URL (Fallback or External)</label>
+                            <label className="text-[8px] text-man-gold uppercase font-black tracking-widest cursor-pointer hover:underline flex items-center gap-1">
+                              <i className="fas fa-upload"></i>
+                              Upload Image
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={(e) => handleImageUpload(p.id, e)}
+                              />
+                            </label>
+                          </div>
                           <input 
                             className="w-full bg-black/40 border border-white/10 p-3 text-[10px] text-gray-400 outline-none focus:border-man-gold" 
-                            value={p.image} 
+                            value={p.image.startsWith('data:') ? 'Custom Upload Active (Base64)' : p.image} 
                             onChange={e => updateProduct(p.id, 'image', e.target.value)}
                           />
                         </div>
@@ -249,7 +291,7 @@ const AdminPanel: React.FC = () => {
           </main>
           
           <footer className="p-6 border-t border-white/5 bg-black/60 text-center">
-            <p className="text-[8px] text-gray-700 uppercase tracking-[1em] font-black">Elite System Dashboard v2.1</p>
+            <p className="text-[8px] text-gray-700 uppercase tracking-[1em] font-black">Elite System Dashboard v2.2</p>
           </footer>
         </div>
       )}
