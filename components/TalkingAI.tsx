@@ -54,7 +54,7 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
 
     try {
       // Fix: Following strict GenAI initialization guidelines by using process.env.API_KEY directly.
-      const ai = new GoogleGenAI({ apiKey: "AIzaSyBCAEa3QfZj095ZtD1IY3oslw8W0uzeFQM" });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const systemInstruction = `You are the "Scent Strategist", a world-class luxury perfume advisor for "Premium Parfumes Elite". 
       Tone: Sophisticated, masculine, exclusive, and professional.

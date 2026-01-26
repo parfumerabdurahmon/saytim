@@ -169,6 +169,17 @@ const AdminPanel: React.FC = () => {
                         <div className="flex-1 space-y-4">
                           <input className="w-full bg-transparent border-b border-white/10 text-man-gold uppercase text-xs font-black outline-none py-1" value={p.brand} onChange={e => updateProduct(p.id, 'brand', e.target.value)} placeholder="Brand" />
                           <input className="w-full bg-transparent border-b border-white/10 text-white font-serif text-lg outline-none py-1" value={p.name} onChange={e => updateProduct(p.id, 'name', e.target.value)} placeholder="Name" />
+                          
+                          <div className="space-y-1">
+                            <label className="text-[8px] text-gray-500 uppercase font-black tracking-widest block">Image Link</label>
+                            <input 
+                              className="w-full bg-transparent border-b border-white/10 text-white text-[10px] outline-none py-1 truncate" 
+                              value={p.image.startsWith('data:') ? 'Base64 Upload' : p.image} 
+                              onChange={e => updateProduct(p.id, 'image', e.target.value)} 
+                              placeholder="Paste image URL here..." 
+                            />
+                          </div>
+
                           <select className="w-full bg-black border border-white/10 p-2 text-[10px] text-white outline-none focus:border-man-gold" value={p.category} onChange={e => updateProduct(p.id, 'category', e.target.value as any)}>
                             {['Woody', 'Floral', 'Fresh', 'Oriental', 'Citrus'].map(c => <option key={c} value={c}>{c}</option>)}
                           </select>
