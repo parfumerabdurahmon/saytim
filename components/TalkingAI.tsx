@@ -47,12 +47,12 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsTyping(true);
 
-    const savedPerfumes = localStorage.getItem('premium_perfumes_data');
+    // Get current perfumes from session (synced from sheet) or fallback
+    const savedPerfumes = sessionStorage.getItem('perfumes');
     const currentPerfumes = savedPerfumes ? JSON.parse(savedPerfumes) : INITIAL_PERFUMES;
     const arsenalString = currentPerfumes.map((p: any) => `${p.brand} ${p.name}: ${p.description}`).join('; ');
 
     try {
-      // Use standard naming and parameter for world-class initialization
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
       
       const systemInstruction = `You are the "Scent Strategist", a world-class luxury perfume advisor for "Premium Parfumes Elite". 
@@ -114,14 +114,16 @@ const TalkingAI: React.FC<TalkingAIProps> = ({ lang }) => {
             </header>
 
             <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-gradient-to-b from-black to-[#080808]">
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-man-gold flex-shrink-0 flex items-center justify-center">
-                  <i className="fas fa-crown text-black text-[10px]"></i>
+              {messages.length === 0 && (
+                <div className="flex gap-4">
+                  <div className="w-8 h-8 rounded-full bg-man-gold flex-shrink-0 flex items-center justify-center">
+                    <i className="fas fa-crown text-black text-[10px]"></i>
+                  </div>
+                  <div className="bg-white/5 p-4 rounded-2xl rounded-tl-none text-xs text-gray-300 leading-relaxed max-w-[85%] border border-white/5">
+                    {t.greeting}
+                  </div>
                 </div>
-                <div className="bg-white/5 p-4 rounded-2xl rounded-tl-none text-xs text-gray-300 leading-relaxed max-w-[85%] border border-white/5">
-                  {t.greeting}
-                </div>
-              </div>
+              )}
 
               {messages.map((m, i) => (
                 <div key={i} className={`flex gap-4 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>

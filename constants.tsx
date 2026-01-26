@@ -65,7 +65,7 @@ export const PERFUMES: ExtendedPerfume[] = [
 
 export const CONTACT_INFO = {
   phone: '+998 99 690 95 75',
-  instagram: 'https://www.instagram.com/premium_parfumes_org',
+  instagram: 'https://www.instagram.com/premium_parfumes__',
   telegram: 'https://t.me/PremiumParfumes',
 };
 
