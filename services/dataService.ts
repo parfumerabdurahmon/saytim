@@ -2,37 +2,19 @@
 import { PERFUMES, TRANSLATIONS, CONTACT_INFO } from '../constants';
 
 /**
- * ⚠️ ATTENTION:
- * You do NOT need to click "Add a service" in Google Apps Script.
- * 
- * 1. Just paste the following into the 'Code.gs' editor window in Google Sheets:
- * 
- * function doGet() {
- *   var scriptProp = PropertiesService.getScriptProperties();
- *   var data = scriptProp.getProperty('siteData');
- *   var output = data ? data : JSON.stringify({});
- *   return ContentService.createTextOutput(output).setMimeType(ContentService.MimeType.JSON);
- * }
- * 
- * function doPost(e) {
- *   var data = e.postData.contents;
- *   var scriptProp = PropertiesService.getScriptProperties();
- *   scriptProp.setProperty('siteData', data);
- *   return ContentService.createTextOutput(JSON.stringify({"status": "success"})).setMimeType(ContentService.MimeType.JSON);
- * }
- * 
- * 2. Click "Deploy" -> "New Deployment" -> "Web App".
- * 3. Set "Who has access" to "Anyone".
- * 4. Copy the URL and paste it below.
+ * GOOGLE APPS SCRIPT SETUP:
+ * 1. Paste the Code.gs content in your Google Sheet script editor.
+ * 2. Deploy as Web App, set access to "Anyone".
+ * 3. Copy the full "Web App URL" and ensure it is pasted in SHEET_API_URL below.
  */
 
-// PASTE YOUR GOOGLE WEB APP URL HERE
 const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbzIuVBhNwhEhLw-zRxJ8ODNJY7nb30m1Re6YXXsi-B9HKY-9_nrBsv5h9zOpvNh-CM/exec'; 
 
 export const dataService = {
   async getSiteData() {
-    if (!SHEET_API_URL || SHEET_API_URL === 'https://script.google.com/macros/s/AKfycbzIuVBhNwhEhLw-zRxJ8ODNJY7nb30m1Re6YXXsi-B9HKY-9_nrBsv5h9zOpvNh-CM/exec') {
-      console.warn("SHEET_API_URL is empty. Using local constants.");
+    // Check if the URL is still the default placeholder or empty
+    if (!SHEET_API_URL || SHEET_API_URL.includes('PASTE_YOUR_URL_HERE')) {
+      console.warn("SHEET_API_URL is not configured. Using local constants.");
       return { perfumes: PERFUMES, translations: TRANSLATIONS, contacts: CONTACT_INFO };
     }
 
@@ -41,24 +23,27 @@ export const dataService = {
       if (!response.ok) throw new Error("Fetch failed");
       const data = await response.json();
       
-      if (!data || !data.perfumes) {
+      // If the sheet is empty or has no perfumes, return defaults
+      if (!data || !data.perfumes || data.perfumes.length === 0) {
+        console.log("Sheet is empty, using default content.");
         return { perfumes: PERFUMES, translations: TRANSLATIONS, contacts: CONTACT_INFO };
       }
 
       return data;
     } catch (error) {
-      console.error("Data Load Error:", error);
+      console.error("Data Load Error (Falling back to defaults):", error);
       return { perfumes: PERFUMES, translations: TRANSLATIONS, contacts: CONTACT_INFO };
     }
   },
 
   async updateSiteData(data: { perfumes: any, translations: any, contacts: any }) {
-    if (!SHEET_API_URL || SHEET_API_URL === 'https://script.google.com/macros/s/AKfycbzIuVBhNwhEhLw-zRxJ8ODNJY7nb30m1Re6YXXsi-B9HKY-9_nrBsv5h9zOpvNh-CM/exec') {
-      alert("Please paste your Google Web App URL into services/dataService.ts");
+    if (!SHEET_API_URL || SHEET_API_URL.includes('PASTE_YOUR_URL_HERE')) {
+      alert("Please configure the SHEET_API_URL in services/dataService.ts");
       return { status: 'error' };
     }
 
     try {
+      // POST to Apps Script using no-cors to avoid redirect issues
       await fetch(SHEET_API_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -66,6 +51,7 @@ export const dataService = {
         body: JSON.stringify(data),
       });
 
+      // Update session storage for immediate UI refresh across components
       sessionStorage.setItem('perfumes', JSON.stringify(data.perfumes));
       sessionStorage.setItem('translations', JSON.stringify(data.translations));
       sessionStorage.setItem('contacts', JSON.stringify(data.contacts));
